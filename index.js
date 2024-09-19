@@ -61,7 +61,7 @@ async function run() {
         }
       }
         const result = await userCollection.updateOne(filter, updatedDoc)
-        result.sed(result);
+        res.send(result);
     })
 
     app.delete('/users/:id', async(req, res) =>{
