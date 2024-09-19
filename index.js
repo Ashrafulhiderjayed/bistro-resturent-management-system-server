@@ -38,6 +38,7 @@ async function run() {
       const result = await userCollection.find().toArray();
       res.send(result);
     })
+
     app.post('/users', async(req, res) =>{
       const user = req.body;
       const query = { email: user.email };
@@ -51,6 +52,14 @@ async function run() {
       res.send(result);
     })
 
+    app.delete('/users/:id', async(req, res) =>{
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await userCollection.deleteOne(query);
+      res.send(result);
+    })
+
+    //menu related api ===============================
     app.get('/menu', async (req, res) => {
       const result = await menuCollection.find().toArray();
       res.send(result);
