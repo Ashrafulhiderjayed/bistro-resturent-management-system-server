@@ -1,9 +1,9 @@
-const express = require('express'); 
+const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
-require ('dotenv').config()
+require('dotenv').config()
 const app = express();
-const port = process.env.PORT || 5000 || 5001; 
+const port = process.env.PORT || 5000 || 5001;
 
 
 //middleware
@@ -33,39 +33,48 @@ async function run() {
     const reviewCollection = client.db("bistroDb").collection("reviews");
     const cartCollection = client.db("bistroDb").collection("carts");
 
-    //users related api ===============================
 
-    app.get("/users", async(req, res) => {
+    //jwt related api ===============================
+    app.post('/jwt', async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: '1h'
+      })
+      res.send({ token })
+    })
+
+    //users related api ===============================
+    app.get("/users", async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result);
     })
 
-    app.post('/users', async(req, res) =>{
+    app.post('/users', async (req, res) => {
       const user = req.body;
       const query = { email: user.email };
       const existingUser = await userCollection.findOne(query);
 
       //insert email if user does not exist
-      if(existingUser){
-        return res.send({message: "User already exists with this email", insertedId: null});
+      if (existingUser) {
+        return res.send({ message: "User already exists with this email", insertedId: null });
       }
       const result = await userCollection.insertOne(user);
       res.send(result);
     })
 
-    app.patch('/users/admin/:id', async(req, res) =>{
+    app.patch('/users/admin/:id', async (req, res) => {
       const id = req.params.id;
-      const filter = { _id: new ObjectId(id)};
+      const filter = { _id: new ObjectId(id) };
       const updatedDoc = {
         $set: {
           role: 'admin',
         }
       }
-        const result = await userCollection.updateOne(filter, updatedDoc)
-        res.send(result);
+      const result = await userCollection.updateOne(filter, updatedDoc)
+      res.send(result);
     })
 
-    app.delete('/users/:id', async(req, res) =>{
+    app.delete('/users/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await userCollection.deleteOne(query);
@@ -77,32 +86,32 @@ async function run() {
       const result = await menuCollection.find().toArray();
       res.send(result);
     })
-    
+
     app.get('/reviews', async (req, res) => {
       const result = await reviewCollection.find().toArray();
       res.send(result);
     })
 
     //cart collection================================================================
-    app.get('/carts', async(req, res) =>{
+    app.get('/carts', async (req, res) => {
       const email = req.query.email;
       const query = { email: email };
       const result = await cartCollection.find(query).toArray();
       res.send(result);
     })
-    app.post('/carts', async(req, res) =>{
+    app.post('/carts', async (req, res) => {
       const cartItem = req.body;
       const result = await cartCollection.insertOne(cartItem);
       res.send(result);
     })
 
-    app.delete('/carts/:id', async(req, res) =>{
+    app.delete('/carts/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await cartCollection.deleteOne(query);
       res.send(result);
     })
-    
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -121,5 +130,5 @@ app.get('/', (req, res) => {
 
 
 app.listen(port, () => {
-    console.log(`Bistro Server is running on port ${port}`);
-  })
+  console.log(`Bistro Server is running on port ${port}`);
+})
