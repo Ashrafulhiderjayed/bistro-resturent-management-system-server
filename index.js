@@ -43,8 +43,15 @@ async function run() {
       res.send({ token })
     })
 
+    //middlewares
+    const verifyToken = (req, res, next) => {
+      console.log('from middlewares', req.headers);
+      next();
+    }
+
     //users related api ===============================
-    app.get("/users", async (req, res) => {
+    app.get("/users", verifyToken, async (req, res) => {
+      console.log(req.headers);
       const result = await userCollection.find().toArray();
       res.send(result);
     })
