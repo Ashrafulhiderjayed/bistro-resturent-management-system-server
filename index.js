@@ -46,7 +46,17 @@ async function run() {
     //middlewares
     const verifyToken = (req, res, next) => {
       console.log('from middlewares', req.headers);
-      next();
+      if(!req.headers.authorization){
+        return res.status(401).send({ message: 'Forbidden Access.' });
+      }
+      const token = req.headers.authorization.split(' ')[1];
+      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+        if(err){
+          return res.status(403).send({ message: 'Invalid Token.' });
+        }
+        req.decoded = decoded;
+        next();
+      })
     }
 
     //users related api ===============================
