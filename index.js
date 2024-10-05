@@ -129,20 +129,43 @@ async function run() {
     app.get('/menu', async (req, res) => {
       const result = await menuCollection.find().toArray();
       res.send(result);
-    })
-    
+    });
+
     app.get('/menu/:id', async (req, res) => {
       const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await menuCollection.findOne(query).toArray();
-      res.send(result);
-    })
+      
+      // Check if the provided ID is a valid ObjectId
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).send({ error: 'Invalid ID format' });
+      }
+      
+      try {
+        // Try to find the document by ObjectId
+        let query = { _id: new ObjectId(id) };
+        let result = await menuCollection.findOne(query);
+        
+        // If not found, try to find by string ID
+        if (!result) {
+          query = { _id: id };
+          result = await menuCollection.findOne(query);
+        }
+        
+        if (!result) {
+          return res.status(404).send({ message: 'Menu item not found' });
+        }
+        
+        res.send(result);
+      } catch (error) {
+        console.error('Error fetching menu item:', error);
+        res.status(500).send({ error: 'An error occurred while fetching the menu item' });
+      }
+    });
 
     app.post('/menu', verifyToken, verifyAdmin, async (req, res) => {
       const item = req.body;
       const result = await menuCollection.insertOne(item);
       res.send(result);
-    })
+    });
 
     app.delete('/menu/:id', verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
