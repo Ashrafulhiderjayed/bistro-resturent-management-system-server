@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config()
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const app = express();
 const port = process.env.PORT || 5000 || 5001;
 
@@ -133,27 +134,27 @@ async function run() {
 
     app.get('/menu/:id', async (req, res) => {
       const id = req.params.id;
-      
+
       // Check if the provided ID is a valid ObjectId
       if (!ObjectId.isValid(id)) {
         return res.status(400).send({ error: 'Invalid ID format' });
       }
-      
+
       try {
         // Try to find the document by ObjectId
         let query = { _id: new ObjectId(id) };
         let result = await menuCollection.findOne(query);
-        
+
         // If not found, try to find by string ID
         if (!result) {
           query = { _id: id };
           result = await menuCollection.findOne(query);
         }
-        
+
         if (!result) {
           return res.status(404).send({ message: 'Menu item not found' });
         }
-        
+
         res.send(result);
       } catch (error) {
         console.error('Error fetching menu item:', error);
@@ -215,6 +216,22 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const result = await cartCollection.deleteOne(query);
       res.send(result);
+    })
+
+    // payment intent================================================================
+    app.post('/create-payment-intent', async (req, res) => {
+      const price = req.body;
+      const amount = parseInt(price * 100);
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: 'usd',
+        payment_method_types: ['card'],
+      })
+
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
     })
 
     // Send a ping to confirm a successful connection
