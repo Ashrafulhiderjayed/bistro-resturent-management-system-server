@@ -167,10 +167,10 @@ async function run() {
       res.send(result);
     });
 
-    app.patch('/menu', async (req, res) =>{
-      const updatedItems = req.body;
+    app.patch('/menu/:id', async (req, res) => {
+      const item = req.body;
       const id = req.params.id;
-      const filter = { _id: new ObjectId(id)}
+      const filter = { _id: new ObjectId(id) }
       const updatedDoc = {
         $set: {
           name: item.name,
@@ -180,7 +180,8 @@ async function run() {
           image: item.image
         }
       }
-      const result = await menuCollection.updateOne(filter, updatedDoc);
+
+      const result = await menuCollection.updateOne(filter, updatedDoc)
       res.send(result);
     })
 
